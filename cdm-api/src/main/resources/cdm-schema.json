@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#", 
+  "additionalProperties": false, 
+  "definitions": {}, 
+  "id": "http://roscap.com/cdm/service.json", 
+  "properties": {
+    "CdmUri": {
+      "id": "/properties/CdmUri", 
+      "type": "string"
+    }, 
+    "Id": {
+      "id": "/properties/Id", 
+      "type": "string"
+    }, 
+    "Method": {
+      "additionalItems": false, 
+      "id": "/properties/Method", 
+      "items": {
+        "additionalProperties": false, 
+        "id": "/properties/Method/items", 
+        "properties": {
+          "CdmUri": {
+            "id": "/properties/Method/items/properties/CdmUri", 
+            "type": "string"
+          }, 
+          "Parameter": {
+            "additionalItems": false, 
+            "id": "/properties/Method/items/properties/Parameter", 
+            "items": {
+              "additionalProperties": false, 
+              "id": "/properties/Method/items/properties/Parameter/items", 
+              "properties": {
+                "CdmUri": {
+                  "id": "/properties/Method/items/properties/Parameter/items/properties/CdmUri", 
+                  "type": "string"
+                }, 
+                "QualifiedType": {
+                  "id": "/properties/Method/items/properties/Parameter/items/properties/QualifiedType", 
+                  "type": "string"
+                }
+              }, 
+              "required": [
+                "CdmUri", 
+                "QualifiedType"
+              ], 
+              "type": "object"
+            }, 
+            "type": "array"
+          }, 
+          "QualifiedType": {
+            "id": "/properties/Method/items/properties/QualifiedType", 
+            "type": "string"
+          }
+        }, 
+        "required": [
+          "Parameter", 
+          "CdmUri", 
+          "QualifiedType"
+        ], 
+        "type": "object"
+      }, 
+      "type": "array"
+    }, 
+    "QualifiedType": {
+      "id": "/properties/QualifiedType", 
+      "type": "string"
+    }
+  }, 
+  "required": [
+    "Method", 
+    "Id", 
+    "CdmUri", 
+    "QualifiedType"
+  ], 
+  "type": "object"
+}

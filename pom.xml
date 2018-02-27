@@ -1,0 +1,43 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.roscap</groupId>
+	<artifactId>middleware</artifactId>
+	<version>1</version>
+	<packaging>pom</packaging>
+	<distributionManagement>
+		<repository>
+			<id>roscap-releases</id>
+			<url>http://ngwee.roscap.com:8081/repository/roscap-releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>roscap-snapshots</id>
+			<url>http://ngwee.roscap.com:8081/repository/roscap-snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
+	<modules>
+		<!-- transport -->
+		<module>transport-api</module>
+<!-- 		<module>local-transport</module> -->
+		<module>kafka-transport</module>
+		<!-- APIs -->
+		<module>cdm-api</module>
+		<module>service-remoting</module>
+		<module>service-registry-api</module>
+		<module>service-api</module>
+		<!-- end apps -->
+		<module>service-registry</module>
+		<module>service-executor</module>
+	</modules>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
