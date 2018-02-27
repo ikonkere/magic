@@ -5,27 +5,35 @@ This is a brief howto on creating service meshes with Magic(tm) Middleware.
 To discover exactly why you must configure or use something in a certain way, have a look at JavaDocs
 which i've painstakingly and comprehensibly compiled. 
 
-## Requirements
+### Requirements
 * Java 8+
 * Kafka 0.11+ 
 * Spring Framework [4.3.x] (i am not sure it works on 5.x and i couldn't care less ;P)
 * Maven 3.3 (feel free to use your favourite build tool though)
 
+### Limitations
+* data interchange protocols are internal and currently not portable.
+* one transport per JVM because of reasons.
+* even though most of relevant Kafka producer/consumer settings are internalized,
+setting up Kafka/Zk instance itself is out of scope.
+* security is out of scope either.
+* all service calls are finite, this is totally on the contrary with streaming idea of Kafka.
+
 ## Service mesh
 
 It is an ecosystem of (micro)services that communicate with each other for whatever reasons. The mesh must be available, scalable and performant,
-and location-oblivious - that is the responsibility of Magic(tm). Everything else is out of scope (stateless vs stateful, partitioning, eventual consistency, etc).
+and location-oblivious - that is the responsibility of Magic(tm). Everything else is out of scope (stateless vs stateful, data partitioning, eventual consistency, etc).
 
 Middleware is built on top of a "transport" abstraction. Main focus was of course Kafka, but other transports can be easily implemented.
 Currently an extra one is "local" transport when you execute everything in a single JVM (useful for testing).
 
 ## Service mesh node
 
-A service mesh node is a (micro)service written in Java that complies to CDM.
+A service mesh node is an instance of a (micro)service written in Java that complies to CDM.
 
 ### Coding
 
-Microservice itself (use whatever method signatures you like as long as it is CDM-compliant).
+Microservice definition (use whatever method signatures you like as long as it is CDM-compliant).
 
 	package com.mystuff;
 	
@@ -53,6 +61,8 @@ SF config for the microservice (set kafka bootstrap address using your favourite
 			return new MyServiceImpl();
 		}
 	}
+
+Implement the service interface however you like.
 
 ### Configuring
 
@@ -98,11 +108,11 @@ I'm not sure webmvc is even required, because this dependency list is out-of-con
 
 ### Running
 
-Use your favourite microprofile runtime: wildfly, liberty, spring-boot, etc.
+Use your favourite microprofile runtime: wildfly, liberty, spring-boot, etc. Mesh nodes scale automatically, just start the same binary several times.
 
 ## Service registry
 
-Is itself your service mesh node and a CDM service at it. Used for discovery and housekeeping (see JavaDoc for details), istio-light if you want.
+Is itself your service mesh node and a CDM service at it. Used for discovery, scaling and housekeeping (see JavaDoc for details), istio-light if you want.
 
 Supports external in-memory storages, but for now only one of them - Infinispan - implements Java8 streams.
 
@@ -119,7 +129,7 @@ SF config for the registry is rather simple.
 	
 	@Configuration
 	@Import(ServiceRegistryContext.class)
-	public class ServiceRegistryWebContext {
+	public class ServiceRegistryAppContext {
 	
 	}
 
@@ -179,17 +189,19 @@ I'm not sure webmvc is even required, because this dependency list is out-of-con
 	
 ### Running
 
-Again, use your favourite microprofile runtime: wildfly, liberty, spring-boot, etc.
+Again, use your favourite microprofile runtime: wildfly, liberty, spring-boot, etc. Service registry will automatically discover all nodes (service instances).
+Theoretically, as it's a node itself, it can scale as an ordinary node, never tested that though.
 
 ## Service client
 
-Now that you built your mesh, you need to access it and start using your nodes.
+Now that you built your mesh, you need to access it and start using your services.
 
 This part is less developer-friendly.
 
 ### Coding
 
-First you must configure the mediator (service executor). Yeah, i know, configuring transport explicitly - not cool.
+First you must configure the mediator (service executor). Yeah, i know, configuring transport explicitly - not cool,
+but you most probably have it initialized elsewhere.
 
 	package com.mystuff;
 	
@@ -281,6 +293,8 @@ of your service, specifying the method you want to invoke (see JavaDocs for deep
 				/* your args here*/);
 		}
 	}
+
+Notice that your client has no explicit knowledge of where the service is physically deployed, or even which particular node it accesses.
 
 ### Building
 
