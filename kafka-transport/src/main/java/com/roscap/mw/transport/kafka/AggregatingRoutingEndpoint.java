@@ -7,6 +7,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.roscap.mw.transport.correlation.TransportHeader;
 import com.roscap.mw.transport.endpoint.RoutedEndpoint;
 import com.roscap.mw.transport.endpoint.TransportEndpoint;
@@ -21,6 +24,8 @@ import com.roscap.mw.transport.header.HeaderContainer;
  *
  */
 public class AggregatingRoutingEndpoint implements TransportEndpoint<HeaderContainer> {
+	private static final Logger logger = LoggerFactory.getLogger(AggregatingRoutingEndpoint.class);
+
 	private final UUID endpointId;
 	private final Map<UUID, RoutedEndpoint<HeaderContainer>> endpoints = 
 			new HashMap<UUID, RoutedEndpoint<HeaderContainer>>();
@@ -40,6 +45,8 @@ public class AggregatingRoutingEndpoint implements TransportEndpoint<HeaderConta
 		UUID correlation = (UUID)payload.getHeader(TransportHeader.CORRELATION);
 		
 		if (correlation != null && endpoints.containsKey(correlation)) {
+			logger.info(String.format("aggregator %s routing %s to %s", endpointId, payload, correlation));
+
 			TransportEndpoint<HeaderContainer> endpoint = endpoints.get(correlation);
 			executor.execute(() -> {
 				endpoint.receive(fromDestination, payload);

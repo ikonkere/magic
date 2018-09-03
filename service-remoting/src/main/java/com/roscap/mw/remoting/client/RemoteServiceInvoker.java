@@ -36,7 +36,7 @@ public class RemoteServiceInvoker extends ReflectiveServiceInvoker implements In
 	 */
 	public static final long PROPAGATE_TIMEOUT = 5;
 
-	private TransportAdapter transportAdapter;
+	protected TransportAdapter transportAdapter;
 	
 	private UUID serviceId;
 
@@ -59,11 +59,20 @@ public class RemoteServiceInvoker extends ReflectiveServiceInvoker implements In
 		this.transportAdapter = arg0;
 	}
 	
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.remoting.support.RemotingSupport#getBeanClassLoader()
+	 */
+	@Override
+	public ClassLoader getBeanClassLoader() {
+		return super.getBeanClassLoader();
+	}
+	
 	/**
 	 * 
 	 * @return
 	 */
-	public UUID getServiceId() {
+	public synchronized UUID getServiceId() {
 		return serviceId;
 	}
 
@@ -71,7 +80,7 @@ public class RemoteServiceInvoker extends ReflectiveServiceInvoker implements In
 	 * 
 	 * @param serviceId
 	 */
-	public void setServiceId(UUID serviceId) {
+	public synchronized void setServiceId(UUID serviceId) {
 		this.serviceId = serviceId;
 	}
 

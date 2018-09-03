@@ -33,6 +33,11 @@ public class ServiceRegistryContext {
 			}
 
 			@Override
+			public void unregister(UUID id) {
+				mock.remove(id);
+			}
+			
+			@Override
 			public void keepAlive(UUID id) {
 				throw new UnsupportedOperationException();
 			}

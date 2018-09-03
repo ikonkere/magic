@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import com.roscap.mw.executor.ServiceDiscoveryCallbackFactory;
 import com.roscap.mw.executor.ServiceExecutor;
 import com.roscap.mw.remoting.config.EnableMagicClient;
-import com.roscap.mw.executor.ServiceAccessorFactory;
 
 /**
  * Service executor context that is the main entry
@@ -20,11 +19,6 @@ import com.roscap.mw.executor.ServiceAccessorFactory;
 @Configuration
 @EnableMagicClient(packages="com.roscap")
 public class ServiceExecutorContext {
-	@Bean
-	public ServiceAccessorFactory serviceInvokerFactory() {
-		return new ServiceAccessorFactory();
-	}
-	
 	/**
 	 * Dependent beans are autowired due to certain instantiation-time restrictions
 	 * 

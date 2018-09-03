@@ -1,48 +1,25 @@
-package com.roscap.mw.reflection;
+package com.roscap.mw.registry;
 
 import java.io.Serializable;
-
-import org.springframework.remoting.support.RemoteInvocationResult;
 
 import com.roscap.mw.transport.correlation.TransportHeader;
 import com.roscap.mw.transport.header.Attributes;
 import com.roscap.mw.transport.header.HeaderContainer;
 
 /**
- * convenient extension of default RIR that provides
- * transport headers functionality
+ * Extended control imperative for managed clients (only
+ * when client cahing is on).
  * 
  * @author is.zharinov
  *
  */
-public class RemoteInvocationResultExt extends RemoteInvocationResult implements HeaderContainer {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -5791275281418509859L;
-
+public class ClientControlImperative implements HeaderContainer {
+	private static final long serialVersionUID = -5117645430909664787L;
 	private Attributes headers = new Attributes();
-	
-	/**
-	 * Create a new RemoteInvocationResult for the given result value.
-	 * @param value the result value returned by a successful invocation
-	 * of the target method
-	 */
-	public RemoteInvocationResultExt(Object value) {
-		super(value);
-	}
+	private final ControlImperative imperative;
 
-	/**
-	 * Create a new RemoteInvocationResult for an existing one
-	 * @param arg0
-	 */
-	RemoteInvocationResultExt(RemoteInvocationResult arg0) {
-		setValue(arg0.getValue());
-		setException(arg0.getException());
-		
-		if (arg0 instanceof RemoteInvocationResultExt) {
-			setHeaders(((RemoteInvocationResultExt)arg0).getHeaders());
-		}
+	public ClientControlImperative(ControlImperative arg0) {
+		imperative = arg0;
 	}
 
 	/*
@@ -73,18 +50,19 @@ public class RemoteInvocationResultExt extends RemoteInvocationResult implements
 	}
 	
 	/**
-	 * 
+	 * Which control imperative this container has
 	 * @return
 	 */
-	public Attributes getHeaders() {
-		return headers;
+	public ControlImperative getImperative() {
+		return imperative;
 	}
 	
-	/**
-	 * 
-	 * @param arg0
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#toString()
 	 */
-	public void setHeaders(Attributes arg0) {
-		this.headers = arg0;
+	@Override
+	public String toString() {
+		return imperative.toString();
 	}
 }

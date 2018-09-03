@@ -1,4 +1,5 @@
 package com.roscap.test;
+
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 

@@ -15,6 +15,7 @@ import com.roscap.cdm.api.IdGenerator;
 import com.roscap.cdm.api.ServiceInstance;
 import com.roscap.cdm.api.CdmUtils;
 import com.roscap.cdm.api.annotation.Service;
+import com.roscap.mw.service.logging.ServiceInstanceLogSupport;
 
 /**
  * A PFB that creates service instance proxies. It is not prototype,
@@ -44,6 +45,7 @@ public class ServiceInstanceProxyFactory<T> extends AbstractSingletonProxyFactor
 	public static <T> ServiceInstanceProxyFactory<T> newInstance(Service serviceDescriptor, Class<T> serviceClass, T service) throws InstantiationException {
 		ServiceInstanceProxyFactory<T> i = new ServiceInstanceProxyFactory<T>(serviceDescriptor, serviceClass);
 		i.setTarget(service);
+		ServiceInstanceLogSupport.prepareLog(i.instanceId);
 		return i;
 	}
 

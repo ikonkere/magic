@@ -1,27 +1,22 @@
 package com.roscap.mw.remoting.client;
 
-import java.util.UUID;
-
 import org.springframework.aop.framework.ProxyFactory;
-import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.InitializingBean;
 
 /**
- * Ordinary PFB responsible for creating proxy object with it's superclass
- * as method interceptor
+ * Ordinary PFB responsible for creating proxy object 
+ * for a given service invoker that acts as method interceptor
  * @author is.zharinov
  *
  */
-public class RemoteServiceProxyFactoryBean extends RemoteServiceInvoker
-		implements FactoryBean<Object>, BeanClassLoaderAware {
+public class RemoteServiceProxyFactoryBean<T extends RemoteServiceInvoker>
+		implements FactoryBean<Object>, InitializingBean {
 	private Object serviceProxy;
+	private final T interceptor;
 
-	public RemoteServiceProxyFactoryBean() {
-		
-	}
-
-	public RemoteServiceProxyFactoryBean(UUID arg0) {
-		super(arg0);
+	public RemoteServiceProxyFactoryBean(T arg0) {
+		interceptor = arg0;
 	}
 
 	/*
@@ -30,12 +25,11 @@ public class RemoteServiceProxyFactoryBean extends RemoteServiceInvoker
 	 */
 	@Override
 	public void afterPropertiesSet() {
-		if (this.getServiceInterface() == null) {
+		if (interceptor.getServiceInterface() == null) {
 			throw new IllegalArgumentException("Property 'serviceInterface' is required");
 		}
-		this.serviceProxy = new ProxyFactory(this.getServiceInterface(), this).getProxy(this.getBeanClassLoader());
 
-		super.afterPropertiesSet();
+		this.serviceProxy = new ProxyFactory(interceptor.getServiceInterface(), interceptor).getProxy(interceptor.getBeanClassLoader());
 	}
 
 	/*
@@ -53,7 +47,7 @@ public class RemoteServiceProxyFactoryBean extends RemoteServiceInvoker
 	 */
 	@Override
 	public Class<?> getObjectType() {
-		return this.getServiceInterface();
+		return interceptor.getServiceInterface();
 	}
 
 	/*

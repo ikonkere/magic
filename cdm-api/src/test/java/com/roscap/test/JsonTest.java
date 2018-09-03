@@ -22,7 +22,7 @@ public class JsonTest {
 	Object spec;
 
 	private static Object extractDescriptor(UUID id, Object service) {
-		return extractDescriptor(id, CdmUtils.findTargetServiceInterface(service.getClass()));
+		return CdmUtils.extractDescriptor(id, CdmUtils.findTargetServiceInterface(service.getClass()));
 	}
 	
 	@Before

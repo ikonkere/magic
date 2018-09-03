@@ -27,7 +27,6 @@ import com.roscap.mw.kafka.spring.event.PartitionsRevokedEvent;
 import com.roscap.mw.transport.TransportAdapter;
 import com.roscap.mw.transport.endpoint.RoutedEndpoint;
 import com.roscap.mw.transport.endpoint.TransportEndpoint;
-import com.roscap.mw.transport.header.HeaderContainer;
 
 /**
  * Kafka transport adapter incapsulating everything needed to do remoting
@@ -226,7 +225,7 @@ public class KafkaTransportAdapter implements TransportAdapter,
 		if (endpoint.isRouted()) {
 			kafkaContext.getBean(AggregatingRoutingEndpoint.class).remove((RoutedEndpoint)endpoint);
 		}
-		else {
+		else if (klf != null) {
 			//it doesn't matter, underlying method only uses endpoint id, which is consistent
 			klf.unregisterInvokerListener(new DelegatingKafkaListener(endpoint));
 		}

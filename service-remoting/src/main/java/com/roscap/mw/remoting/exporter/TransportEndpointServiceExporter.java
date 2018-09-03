@@ -1,6 +1,9 @@
 package com.roscap.mw.remoting.exporter;
 
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +26,8 @@ public class TransportEndpointServiceExporter extends ReflectiveServiceExporter
 	private static final Logger logger = LoggerFactory.getLogger(TransportEndpointServiceExporter.class);
 	private final UUID serviceId;
 	private TransportAdapter transportAdapter;
+
+	private final ExecutorService executor = Executors.newFixedThreadPool(10);
 	
 	public TransportEndpointServiceExporter(UUID arg0) {
 		serviceId = arg0;
@@ -80,9 +85,16 @@ public class TransportEndpointServiceExporter extends ReflectiveServiceExporter
 	 */
 	@Override
 	public void receive(String fromDestination, RemoteInvocationExt payload) {
-		logger.info(String.format("service %s received %s", serviceId, payload));
-		this.receive(payload);
+		//FIXME: in certain recursive cases executor will run out of threads
+		//and will block kafka listener threads in turn.
+		//i can't seem to fix this for now, but must have this in mind
+		executor.execute(() -> {
+			logger.info(String.format("service %s received %s", serviceId, payload));
+			this.receive(payload);
+		});
 	}
+	
+	private AtomicInteger i = new AtomicInteger(10);
 
 	/*
 	 * (non-Javadoc)

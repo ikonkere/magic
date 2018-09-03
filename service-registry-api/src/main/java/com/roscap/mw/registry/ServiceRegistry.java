@@ -48,6 +48,13 @@ public interface ServiceRegistry {
 	public void register(UUID id, Object descriptor);
 	
 	/**
+	 * gracefully unregister a service
+	 * 
+	 * @param id service id
+	 */
+	public void unregister(UUID id);
+	
+	/**
 	 * mark the service as alive (intended to be remotely called)
 	 * @internal
 	 * @param id service id

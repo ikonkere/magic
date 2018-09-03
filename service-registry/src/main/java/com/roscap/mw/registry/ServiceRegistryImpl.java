@@ -1,12 +1,15 @@
 package com.roscap.mw.registry;
 
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -42,6 +45,7 @@ public class ServiceRegistryImpl implements ServiceRegistry, InitializingBean {
 	private long clientStaleTimeout = CLIENT_STALE;
 	
 	private boolean cacheClients = true;
+	private boolean enableInstanceFailover = false;
 
 	//should be noted that adapter is initialized elsewhere
 	private TransportAdapter transportAdapter = TransportFactory.getTransport();
@@ -135,10 +139,18 @@ public class ServiceRegistryImpl implements ServiceRegistry, InitializingBean {
 			//remove instance
 			instanceManager.withdraw(serviceId);
 
-			//remove from client cache
-			purgeClientCache(v -> serviceId.equals(v.left));
-
-			//remove from regsitry
+			if (cacheClients) {
+				//remove service from client cache
+				Map<UUID, Set<UUID>> purged = purgeClientCache(v -> serviceId.equals(v.left));
+	
+				//TODO: need not invalidate if no instances are available
+				if (enableInstanceFailover) {
+					//invalidate affected clients
+					invalidate(purged);
+				}
+			}
+			
+			//remove from registry
 			registry.remove(serviceId);
 
 			logger.info("unregistered service: " + serviceId);
@@ -212,18 +224,39 @@ public class ServiceRegistryImpl implements ServiceRegistry, InitializingBean {
 	 * 
 	 * @param determinant
 	 */
-	private synchronized void purgeClientCache(Function<Tuple<UUID, ZonedDateTime>, Boolean> determinant) {
+	private synchronized Map<UUID, Set<UUID>> purgeClientCache(Function<Tuple<UUID, ZonedDateTime>, Boolean> determinant) {
+		//map of clientId -> set of instanceId
+		Map<UUID, Set<UUID>> purged = new HashMap<>();
+				
 		//streaming replaceAll might not work in certain cases
 		//so we don't use it here
 		for (UUID key : clients.keySet()) {
 			Map<URI, Tuple<UUID, ZonedDateTime>> clientCache = clients.get(key);
 			
 			//purge services from cache
+			if (clientCache != null) {
+				purged.put(key, new HashSet<>());
+				
+				for (URI key2 : clientCache.keySet()) {
+					if (determinant.apply(clientCache.get(key2))) {
+						purged.get(key).add(clientCache.get(key2).left);
+						clientCache.remove(key2);
+					}
+				}
+				
+				if (!purged.get(key).isEmpty()) {
+					clients.put(key, clientCache);
+					logger.debug(String.format("cleaned stale client %s", key));
+				}
+			}
+
+			/*
 			if (clientCache != null &&
 					clientCache.entrySet().removeIf(e -> determinant.apply(e.getValue()))) {
 				clients.put(key, clientCache);
 				logger.debug(String.format("removed stale client %s", key));
 			}
+			*/		
 		}
 		
 /*		
@@ -236,6 +269,7 @@ public class ServiceRegistryImpl implements ServiceRegistry, InitializingBean {
 			return q;
 		});
 */		
+		return purged;
 	}
 	
 	/*
@@ -266,6 +300,25 @@ public class ServiceRegistryImpl implements ServiceRegistry, InitializingBean {
 	}
 	
 	/**
+	 * notifies clients to refresh service instances
+	 * 
+	 * @param purged
+	 */
+	public void invalidate(Map<UUID, Set<UUID>> purged) {
+		purged.entrySet().forEach(e -> {
+			e.getValue().forEach(v -> {
+				ClientControlImperative ri =
+						new ClientControlImperative(ControlImperative.REFRESH);
+				ri.addHeader(TransportHeader.CLIENT,
+						transportAdapter.clientId());
+				ri.addHeader(TransportHeader.CORRELATION, v);
+
+				transportAdapter.send(e.getKey().toString(), ri);				
+			});
+		});
+	}
+	
+	/**
 	 * periodically pings services to see if they are alive
 	 */
 	@Scheduled(initialDelay=10000l, fixedDelay=60000l)
@@ -286,7 +339,7 @@ public class ServiceRegistryImpl implements ServiceRegistry, InitializingBean {
 		status.forEach((k, v) -> {
 				if (!v) {
 					unregister(k);
-					logger.warn("removing dead service: " + k);
+					logger.warn("removed dead service: " + k);
 				}
 			}
 		);
@@ -299,14 +352,16 @@ public class ServiceRegistryImpl implements ServiceRegistry, InitializingBean {
 	 */
 	@Scheduled(initialDelay=40000l, fixedDelay=30*60000l)
 	public synchronized void clientChecker() {
-		logger.info("purging cache for stale clients");		
-		ZonedDateTime t = ZonedDateTime.now();
-		
-		//remove cached services that weren't accessed recently
-		purgeClientCache(e -> e.right.until(t, ChronoUnit.SECONDS) >= clientStaleTimeout);
-		
-		//remove empty cache entries
-		clients.entrySet().removeIf(p -> p.getValue() == null || p.getValue().isEmpty());
+		if (cacheClients) {
+			logger.info("purging cache for stale clients");		
+			ZonedDateTime t = ZonedDateTime.now();
+			
+			//remove cached services that weren't accessed recently
+			purgeClientCache(e -> e.right.until(t, ChronoUnit.SECONDS) >= clientStaleTimeout);
+			
+			//remove empty cache entries
+			clients.entrySet().removeIf(p -> p.getValue() == null || p.getValue().isEmpty());
+		}
 	}
 	
 	/**
@@ -364,5 +419,20 @@ public class ServiceRegistryImpl implements ServiceRegistry, InitializingBean {
 	 */
 	public void setCacheClients(boolean arg0) {
 		this.cacheClients = arg0;
+	}
+	
+	/**
+	 * indicates whether to enable service instance rebalance feature
+	 * (as in - when an instance fails, clients that used this instance
+	 * will be notified to invalidate and receive a new instance reference).
+	 * 
+	 * Experimental feature.
+	 * 
+	 * False by default
+	 * 
+	 * @param arg0
+	 */
+	public void setEnableInstanceFailover(boolean arg0) {
+		this.enableInstanceFailover = arg0;
 	}
 }
