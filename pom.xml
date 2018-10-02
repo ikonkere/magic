@@ -5,16 +5,6 @@
 	<artifactId>middleware</artifactId>
 	<version>1</version>
 	<packaging>pom</packaging>
-	<distributionManagement>
-		<repository>
-			<id>roscap-releases</id>
-			<url>http://ngwee.roscap.com:8081/repository/roscap-releases/</url>
-		</repository>
-		<snapshotRepository>
-			<id>roscap-snapshots</id>
-			<url>http://ngwee.roscap.com:8081/repository/roscap-snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
 	<modules>
 		<!-- transport -->
 		<module>transport-api</module>
