@@ -7,8 +7,8 @@ which i've painstakingly and comprehensibly compiled.
 
 ### Requirements
 * Java 8+
-* Kafka 0.11+ 
-* Spring Framework [4.3.x] (i am not sure it works on 5.x and i couldn't care less ;P)
+* Kafka 1.0.1 (later requires SF 5) 
+* Spring Framework [4.3.x]
 * Maven 3.3 (feel free to use your favourite build tool though)
 
 ### Limitations
@@ -23,6 +23,8 @@ setting up Kafka/Zk instance itself is out of scope.
 
 It is an ecosystem of (micro)services that communicate with each other for whatever reasons. The mesh must be available, scalable and performant,
 and location-oblivious - that is the responsibility of Magic(tm). Everything else is out of scope (stateless vs stateful, data partitioning, eventual consistency, etc).
+
+Canonical data model (CDM) defines services with a custom URI notation: `cdm://[ServiceDomainStructure]/[ServiceName]?[serviceMethod]#[serviceMethodArgumentPosition]`.
 
 Middleware is built on top of a "transport" abstraction. Main focus was of course Kafka, but other transports can be easily implemented.
 Currently an extra one is "local" transport when you execute everything in a single JVM (useful for testing).
